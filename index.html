@@ -1,0 +1,222 @@
+<style>
+* html, body {
+	background-color: #000;
+	margin: 0px;
+	padding: 0px;
+}	
+</style>
+<canvas id="game" width="1200px" height="600px" style="background-color: #000"></canvas>
+
+<script src="common.js"></script>
+<script src="mobile.js"></script>
+<script src="message.js"></script>
+<script src="particle.js"></script>
+<script src="water-drop.js"></script>
+<script src="waterfall.js"></script>
+<script src="lava-drop.js"></script>
+<script src="monster.js"></script>
+<script src="mummy.js"></script>
+<script src="level.js"></script>
+<script src="loader.js"></script>
+<script src="player.js"></script>
+<script>
+
+
+let canvas = document.getElementById('game');
+let context = canvas.getContext('2d');
+
+let player;
+let level;
+let particleManager;
+//let bullet;
+let waterDrop;
+let lavaDrop;
+let waterFall;
+let message;
+
+let camera = {};
+let images = {};
+let sounds = {};
+
+let left = false;
+let right = false;
+let up = false;
+let down = false;
+let keypads = [];
+let ismobile = 0;
+
+function init(levelName) {
+	loadAssets(levelName);
+
+	message = new Message(70)
+	if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+		 ismobile = 1;
+		 message.charsPerRow = 50;
+	}
+
+	window.addEventListener('resize', resizewindow);
+	document.addEventListener("keydown", keyDown);
+	document.addEventListener("keyup", keyUp);
+	canvas.addEventListener('touchstart', touchstart);
+	canvas.addEventListener('touchend', touchend);
+	canvas.addEventListener('touchmove', touchmove);
+
+	resizewindow();
+}
+
+function startGame() {
+	player = new Player(images.dogewarrior_body, config.assets.images.dogewarrior_body.width,config.assets.images.dogewarrior_body.height);
+
+	//bullet = new Bullet(100, images.dogecoin);
+	//bullet.init();
+
+	waterDrop = new WaterDrop(50, images.drop);
+	waterDrop.init();
+
+	lavaDrop = new LavaDrop(50, images.lava_drop);
+	lavaDrop.init();
+
+	particleManager = new ParticleManager(40, images.particle);
+	particleManager.init();
+
+	level.reset();
+
+	camera.x = player.x - canvas.width/2;
+	camera.y = player.y - canvas.height/2;
+}	
+
+function render() {
+	context.clearRect( 0,0, canvas.width , canvas.height );
+	if (images.bgimage ) {
+		context.drawImage( images.bgimage , 0 , 0 ); 
+	}
+
+	level.render(context);
+	player.render(context);
+	level.renderFrontLayer(context);
+	//bullet.render(context);
+	//waterDrop.render(context);
+	//lavaDrop.render(context);
+	//if(waterFall)
+	//waterFall.render(context);
+	particleManager.render(context);
+	message.render(context);
+	renderKeyPad();
+
+	context.fillStyle =  "#fff";
+	context.fillText('x:' + player.x.toFixed(2),10,110);
+	context.fillText('y:' + player.y.toFixed(2),10,130);
+	context.fillText('fx:' + player.framex,10,150);
+}
+
+function update() {
+	level.update();
+	player.update();
+	//bullet.update();
+	//waterDrop.update();
+	//lavaDrop.update();
+	//if(waterFall)
+	//waterFall.update();
+	particleManager.update();
+	message.update();
+	
+	camera.x = player.x - canvas.width / 2  + player.width / 2 ;
+	//camera.x=0;
+	var camera_target_y = player.y - canvas.height / 2 + player.height / 2 ;
+	camera.y +=  (( camera_target_y - camera.y ) / 10 >> 0 ); 
+	//camera.y=0;
+
+	render();
+	//setTimeout(function(){ update() }, 100);
+	window.requestAnimationFrame(update);
+
+}
+
+
+
+//----------------------------
+function clone(obj) {
+
+	if(obj == null || typeof(obj) != 'object')
+		return obj;
+
+	var temp = {};// changed
+
+	for(var key in obj) {
+		if(obj.hasOwnProperty(key)) {
+			
+			if ( key == "properties" ) {
+				temp[key] = {}
+				for ( var property in obj[key] ) {
+					temp[key][property] = obj[key][property];
+				}
+			} else {
+				temp[key] = obj[key];
+			}
+		}
+	}
+	return temp;
+}
+
+
+
+function resizewindow() {
+	canvas.width = window.innerWidth ;
+	canvas.height = window.innerHeight ;
+
+	if ( canvas.width > 1200 ) {
+		canvas.width = 1200;
+		canvas.height = 600;
+		
+		canvas.width = 1280;
+		canvas.height = 640;
+	}
+
+	if ( ismobile == 1 ) {
+		initKeypad();
+	}	
+}
+
+function keyDown(event) {
+	//event.preventDefault();
+	if(event.code === 'ArrowUp' || event.code === 'KeyW') {
+		up = true;
+	}
+	if(event.code === 'ArrowDown' || event.code === 'KeyS') {
+		down = true;
+	}
+	if(event.code === 'ArrowLeft' || event.code === 'KeyA') {
+		left = true;
+	}
+	if(event.code === 'ArrowRight' || event.code === 'KeyD') {
+		right = true;
+	}
+
+}
+
+function keyUp(event) {
+	//event.preventDefault();
+	if(event.code === 'ArrowUp' || event.code === 'KeyW') {
+		up = false;
+	}
+	if(event.code === 'ArrowDown' || event.code === 'KeyS') {
+		down = false;
+	}
+	if(event.code === 'ArrowLeft' || event.code === 'KeyA') {
+		left = false;
+	}
+	if(event.code === 'ArrowRight' || event.code === 'KeyD') {
+		right = false;
+	}
+
+}
+
+
+
+function main(levelName) {
+	init(levelName);
+}
+
+document.onload = main('leonard');
+
+</script>
